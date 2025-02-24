@@ -1,3 +1,4 @@
+// Layout component. Any changes in structure should be done here without breaking the component.
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
