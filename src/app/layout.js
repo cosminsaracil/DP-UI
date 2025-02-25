@@ -1,4 +1,6 @@
 // Layout component. Any changes in structure should be done here without breaking the component.
+// ! Important. app/ directory is marked as Server Components. Modify the layout accordingly if needed Server or Client components.
+import React from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -16,17 +18,6 @@ export const metadata = {
   title: "Dp UI",
   description: "Interface for DP application",
 };
-
-//  ** Theme Import
-import { ThemeProvider, createTheme, duration } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-
-// Theme
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-});
 
 export default function RootLayout({ children }) {
   return (
