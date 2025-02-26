@@ -10,13 +10,13 @@ import ThemeRegistry from "@/components/theme/ThemeProvider";
 export default function Home() {
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeRegistry>
+      <ThemeRegistry>
+        <main className={styles.main}>
           <h1>Hello NEXT!</h1>
           <Button variant="contained">Click me</Button>
-        </ThemeRegistry>
-      </main>
-      <footer className={styles.footer}></footer>
+        </main>
+        <footer className={styles.footer}></footer>
+      </ThemeRegistry>
     </div>
   );
 }
