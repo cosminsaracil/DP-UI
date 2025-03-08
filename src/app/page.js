@@ -1,74 +1,3 @@
-// "use client"; // Mark as client component since we use hooks
-
-// import { useEffect, useRef, useState } from "react";
-// import uPlot from "uplot";
-// import "uplot/dist/uPlot.min.css";
-
-// export default function Home() {
-//   const [data, setData] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const chartRef = useRef(null);
-//   const plotRef = useRef(null);
-
-//   // Fetch data from API
-//   useEffect(() => {
-//     fetch("/api/sine-wave")
-//       .then((res) => res.json())
-//       .then((result) => {
-//         if (result.error) throw new Error(result.error);
-//         setData(result);
-//         setLoading(false);
-//       })
-//       .catch((err) => {
-//         console.error(err);
-//         setLoading(false);
-//       });
-//   }, []);
-
-//   // Render chart with uPlot
-//   useEffect(() => {
-//     if (!data || !chartRef.current) return;
-
-//     const opts = {
-//       width: 1200, // Wider chart for millions of points
-//       height: 600,
-//       scales: { x: { time: false } }, // Non-time x-axis
-//       series: [
-//         {}, // x-axis
-//         {
-//           stroke: "blue",
-//           width: 1,
-//         }, // y-axis
-//       ],
-//     };
-
-//     // Create uPlot instance with full data
-//     plotRef.current = new uPlot(opts, [data.x, data.y], chartRef.current);
-
-//     // Cleanup on unmount
-//     return () => {
-//       if (plotRef.current) plotRef.current.destroy();
-//     };
-//   }, [data]);
-
-//   return (
-//     <div style={{ padding: "20px" }}>
-//       <h1>Dashboard</h1>
-//       {loading ? (
-//         <p>Loading data...</p>
-//       ) : data ? (
-//         <>
-//           <p>Total rows in CSV: {data.totalRows.toLocaleString()}</p>
-//           <p>Displayed points: {data.x.length.toLocaleString()}</p>
-//           <div ref={chartRef} />
-//         </>
-//       ) : (
-//         <p>Error loading data</p>
-//       )}
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -82,14 +11,16 @@ export default function Home() {
   const plotRef = useRef(null);
   const initialRange = useRef(null);
 
-  // Fetch data from API
   useEffect(() => {
+    const startLoad = performance.now();
     fetch("/api/sine-wave")
       .then((res) => res.json())
       .then((result) => {
         if (result.error) throw new Error(result.error);
         setData(result);
         setLoading(false);
+        const endLoad = performance.now();
+        console.log(`Data load time: ${(endLoad - startLoad).toFixed(2)} ms`);
       })
       .catch((err) => {
         console.error(err);
@@ -97,11 +28,10 @@ export default function Home() {
       });
   }, []);
 
-  // Render chart with uPlot and add wheel zoom functionality
   useEffect(() => {
     if (!data || !chartRef.current) return;
 
-    // Calculate min and max without spreading large arrays
+    const startChart = performance.now();
     const dataMin = data.x.reduce((min, val) => Math.min(min, val), data.x[0]);
     const dataMax = data.x.reduce((max, val) => Math.max(max, val), data.x[0]);
     initialRange.current = { xMin: dataMin, xMax: dataMax };
@@ -110,34 +40,19 @@ export default function Home() {
       width: 1200,
       height: 600,
       scales: {
-        x: {
-          time: false,
-          auto: true,
-        },
-        y: {
-          auto: true,
-        },
+        x: { time: false, auto: true },
+        y: { auto: true },
       },
-      series: [
-        {},
-        {
-          stroke: "#00bfff",
-          width: 1,
-        },
-      ],
+      series: [{}, { stroke: "#00bfff", width: 1 }],
       axes: [
         {
           stroke: "#e0e0e0",
           grid: { show: false },
-          values: (self, splits) => splits.map((v) => v.toFixed(8)), // Show 8 decimal places
+          values: (self, splits) => splits.map((v) => v.toFixed(8)),
         },
         {
           stroke: "#e0e0e0",
-          grid: {
-            show: true,
-            stroke: "#444",
-            width: 0.5,
-          },
+          grid: { show: true, stroke: "#444", width: 0.5 },
         },
       ],
       hooks: {
@@ -146,6 +61,7 @@ export default function Home() {
             if (chartRef.current) {
               const plotDiv = chartRef.current;
               const wheelHandler = (e) => {
+                const startZoom = performance.now();
                 e.preventDefault();
                 const { scales } = u;
                 const { min: xMin, max: xMax } = scales.x;
@@ -163,9 +79,14 @@ export default function Home() {
                 const clampedRight = Math.min(dataMax, right);
 
                 u.setScale("x", { min: clampedLeft, max: clampedRight });
+
+                const endZoom = performance.now();
+                console.log(
+                  `Zoom time: ${(endZoom - startZoom).toFixed(2)} ms`
+                );
               };
               plotDiv.addEventListener("wheel", wheelHandler);
-              plotDiv._wheelHandler = wheelHandler; // Store for cleanup
+              plotDiv._wheelHandler = wheelHandler;
             }
           },
         ],
@@ -173,6 +94,11 @@ export default function Home() {
     };
 
     plotRef.current = new uPlot(opts, [data.x, data.y], chartRef.current);
+
+    const endChart = performance.now();
+    console.log(
+      `Chart creation time: ${(endChart - startChart).toFixed(2)} ms`
+    );
 
     return () => {
       if (plotRef.current) {
@@ -185,7 +111,6 @@ export default function Home() {
     };
   }, [data]);
 
-  // Reset view to original range
   const handleReset = () => {
     if (plotRef.current && initialRange.current) {
       plotRef.current.setScale("x", {
@@ -204,7 +129,7 @@ export default function Home() {
         alignItems: "center",
       }}
     >
-      <h1>large dataset visualization dashboard</h1>
+      <h1>dataset visualization</h1>
       {loading ? (
         <p>loading data...</p>
       ) : data ? (
