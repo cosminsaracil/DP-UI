@@ -12,10 +12,13 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.5",
+    "echarts": "^5.6.0",
+    "echarts-for-react": "^3.0.3",
     "next": "15.1.7",
+    "papaparse": "^5.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^2.15.1"
+    "uplot": "^1.6.31"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

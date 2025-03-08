@@ -1,23 +1,54 @@
-export async function GET() {
-  const startTime = Date.now(); // Start time measurement
+import fs from "fs";
+import path from "path";
+import Papa from "papaparse";
 
-  const totalPoints = 1_000_000;
-  const frequency = 0.00005; // Decrease frequency to space out peaks
-  const amplitude = 0.5; // Reduce amplitude for a lower wave
+export async function GET(request) {
+  const filePath = path.join(process.cwd(), "public", "data.csv");
 
-  const sineWaveData = Array.from({ length: totalPoints }, (_, i) => ({
-    x: i,
-    y: amplitude * Math.sin(2 * Math.PI * frequency * i), // Proper sine wave equation
-  }));
+  // Check if file exists
+  if (!fs.existsSync(filePath)) {
+    return new Response(JSON.stringify({ error: "CSV file not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
-  const endTime = Date.now(); // End time measurement
-  console.log(
-    `Generated ${totalPoints} sine wave points in ${endTime - startTime} ms`
-  );
+  const dataX = [];
+  const dataY = [];
+  let rowCount = 0;
 
-  return Response.json({
-    first: sineWaveData[0],
-    last: sineWaveData[sineWaveData.length - 1],
-    allData: sineWaveData, // Full access
+  // Stream the CSV file
+  const fileStream = fs.createReadStream(filePath, { encoding: "utf-8" });
+
+  // Wrap Papa.parse in a Promise to handle streaming asynchronously
+  await new Promise((resolve, reject) => {
+    Papa.parse(fileStream, {
+      delimiter: ";",
+      step: (result) => {
+        const [x, y] = result.data;
+        dataX.push(parseFloat(x));
+        dataY.push(parseFloat(y));
+        rowCount++;
+      },
+      complete: () => resolve(),
+      error: (err) => reject(err),
+    });
+  }).catch((err) => {
+    return new Response(
+      JSON.stringify({ error: "Error parsing CSV", details: err.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   });
+
+  // Return the full dataset
+  return new Response(
+    JSON.stringify({ x: dataX, y: dataY, totalRows: rowCount }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 }
