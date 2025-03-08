@@ -1,40 +1,36 @@
-// "use client"; 
+"use client";
+import { useState, useEffect } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
-// export default function Home() {
-  //   return (
-    //     <div className={styles.page}>
-    //       <ThemeRegistry>
-    //         <main className={styles.main}>
-    //           <h1>Hello NEXT!</h1>
-    //           <Button variant="contained">Click me</Button>
-    //         </main>
-    //         <footer className={styles.footer}></footer>
-    
-    //       </ThemeRegistry>
-    //     </div>
-    //   );
-    // }
-    
-    // src/app/page.js
-'use client'
-import { useState, useEffect } from 'react';
-import Button from "@mui/material/Button";
-import styles from "./page.module.css";
-// ** Theme
-import ThemeRegistry from "@/components/theme/ThemeProvider";
-    
 export default function Home() {
-  const [message, setMessage] = useState('');
+  const [first, setFirst] = useState(null);
+  const [last, setLast] = useState(null);
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/hello'); // ✅ This now works!
-        console.log(response)
+        const response = await fetch("/api/sine-wave");
         const data = await response.json();
-        setMessage(data.message);
+
+        setFirst(data.first);
+        setLast(data.last);
+
+        // Use a subset of data to avoid performance issues (e.g., take every 100th point)
+        const reducedData = data.allData.filter(
+          (_, index) => index % 100 === 0
+        );
+        setChartData(reducedData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     };
 
@@ -42,15 +38,39 @@ export default function Home() {
   }, []);
 
   return (
-    <div className={styles.page}>
-           <ThemeRegistry>
-             <main className={styles.main}>
-      <h2>Welcome to the Home Page!</h2>
-      <p>{message}</p>
-      </main>
-        <footer className={styles.footer}></footer>
-    
-     </ThemeRegistry>
-     </div>
+    <div>
+      <h2>Sine Wave Chart</h2>
+      {first && last ? (
+        <div>
+          <p>
+            First Value: x={first.x}, y={first.y}
+          </p>
+          <p>
+            Last Value: x={last.x}, y={last.y}
+          </p>
+        </div>
+      ) : (
+        <p>Loading...</p>
+      )}
+
+      {chartData.length > 0 ? (
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="x" />
+            <YAxis />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="y"
+              stroke="#8884d8"
+              strokeWidth={2}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      ) : (
+        <p>Loading chart...</p>
+      )}
+    </div>
   );
 }
